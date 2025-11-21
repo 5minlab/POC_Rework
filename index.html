@@ -374,7 +374,7 @@
     const gaugeValues = document.getElementById("gauge-values");
     const gaugeProgress = document.getElementById("gauge-progress");
 
-    const currentExp = 0;
+    const currentExpByLevel = levelRequirements.map((required) => Math.floor(required * 0.45));
 
     function formatNumber(value) {
       return Number(value || 0).toLocaleString("en-US");
@@ -392,6 +392,7 @@
     function updateExpStats() {
       const level = Number(levelSelect.value) || 1;
       const neededForNext = levelRequirements[level - 1];
+      const currentExp = currentExpByLevel[level - 1] ?? 0;
       const cappedExp = Number.isFinite(neededForNext) ? Math.max(0, Math.min(currentExp, neededForNext)) : 0;
       const remaining = Number.isFinite(neededForNext) ? Math.max(neededForNext - cappedExp, 0) : 0;
       const progress = Number.isFinite(neededForNext) ? Math.min((cappedExp / neededForNext) * 100, 100) : 100;
