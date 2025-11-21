@@ -155,6 +155,131 @@
       flex: 1;
     }
 
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--divider);
+      border-radius: 14px;
+      padding: 16px 14px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 200px;
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--text);
+    }
+
+    .stat-title {
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(16, 42, 67, 0.65);
+    }
+
+    .level-display {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+
+    .level-select {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .level-select select {
+      border: 1px solid var(--divider);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-weight: 700;
+      color: var(--text);
+      background: #fff;
+      min-width: 120px;
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04);
+    }
+
+    .xp-gauge {
+      position: relative;
+      border: 1px solid var(--divider);
+      border-radius: 12px;
+      overflow: hidden;
+      background: linear-gradient(120deg, #f5f8fb, #eef2f6);
+      min-height: 96px;
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      isolation: isolate;
+    }
+
+    .xp-track {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      overflow: hidden;
+    }
+
+    .xp-fill {
+      position: absolute;
+      inset: 0;
+      width: 0;
+      background: linear-gradient(90deg, rgba(29, 53, 87, 0.85), rgba(29, 53, 87, 0.55));
+      transition: width 0.2s ease;
+    }
+
+    .xp-overlay {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+      color: var(--text);
+      font-weight: 700;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+    }
+
+    .xp-numbers {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      font-size: 15px;
+      letter-spacing: 0.4px;
+    }
+
+    .xp-numbers span {
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.7);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04);
+      min-width: 62px;
+      text-align: center;
+    }
+
+    .xp-progress {
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      color: rgba(16, 42, 67, 0.75);
+    }
+
+    .xp-caption {
+      font-size: 12px;
+      color: rgba(16, 42, 67, 0.65);
+      letter-spacing: 0.3px;
+      align-self: flex-end;
+    }
+
     .region h2 {
       color: var(--accent);
       opacity: 0.5;
@@ -368,6 +493,32 @@
 
       <article class="region stat" aria-label="stat 구역">
         <h2>stat</h2>
+        <div class="stat-card" aria-live="polite">
+          <div class="stat-header">
+            <div>
+              <div class="stat-title">Level</div>
+              <div class="level-display" data-level-display>1</div>
+            </div>
+            <label class="level-select" aria-label="Select level">
+              <select data-level-select></select>
+            </label>
+          </div>
+
+          <div class="xp-gauge" aria-label="Experience gauge">
+            <div class="xp-track">
+              <div class="xp-fill" data-xp-fill></div>
+            </div>
+            <div class="xp-overlay">
+              <div class="xp-numbers" data-xp-numbers>
+                <span>0</span>
+                <span>0</span>
+                <span>0</span>
+              </div>
+              <div class="xp-progress" data-xp-progress>0%</div>
+            </div>
+          </div>
+          <div class="xp-caption">Current / Remaining / Needed</div>
+        </div>
       </article>
     </section>
   </div>
@@ -378,6 +529,54 @@
       const itemButtons = document.querySelectorAll("[data-item-toggle]");
       const previewImage = document.querySelector(".preview-image");
       const placeholder = document.querySelector(".preview .placeholder");
+      const levelSelect = document.querySelector("[data-level-select]");
+      const levelDisplay = document.querySelector("[data-level-display]");
+      const xpFill = document.querySelector("[data-xp-fill]");
+      const xpNumbers = document.querySelector("[data-xp-numbers]");
+      const xpProgress = document.querySelector("[data-xp-progress]");
+
+      const xpRequirements = [
+        80, 90, 100, 110, 125, 140, 160, 180, 200, 225,
+        250, 275, 300, 330, 360, 390, 420, 455, 490, 525,
+        560, 600, 640, 680, 720, 765, 810, 855, 900, 950,
+        1000, 1050, 1100, 1160, 1220, 1280, 1340, 1410, 1480, 1550,
+        1620, 1700, 1780, 1860, 1940, 2030, 2120, 2210, 2300, 2400,
+      ];
+
+      const formatNumber = (value) => value.toLocaleString("en-US");
+
+      const populateLevelOptions = () => {
+        xpRequirements.forEach((_, index) => {
+          const option = document.createElement("option");
+          const level = index + 1;
+          option.value = String(level);
+          option.textContent = `Level ${level}`;
+          levelSelect.appendChild(option);
+        });
+        levelSelect.value = "1";
+      };
+
+      const getXpState = (level) => {
+        const idx = Math.max(0, Math.min(level - 1, xpRequirements.length - 1));
+        const required = xpRequirements[idx] || 0;
+        const current = level === xpRequirements.length ? required : 0;
+        const remaining = Math.max(required - current, 0);
+        const percent = required === 0 ? 100 : Math.min((current / required) * 100, 100);
+        return { current, remaining, required, percent };
+      };
+
+      const updateLevelUi = (level) => {
+        const { current, remaining, required, percent } = getXpState(level);
+        levelDisplay.textContent = level;
+        xpFill.style.width = `${percent}%`;
+        xpNumbers.innerHTML = `
+          <span>${formatNumber(current)}</span>
+          <span>${formatNumber(remaining)}</span>
+          <span>${formatNumber(required)}</span>
+        `;
+        xpProgress.textContent = `${percent.toFixed(1)}%`;
+        levelSelect.value = String(level);
+      };
 
       const swordSilhouetteSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="#1d3557">
           <path d="M97 12h6l5 46-8 9-8-9z" />
@@ -423,6 +622,14 @@
           placeholder.textContent = `${activeItem} preview coming soon`;
         }
       };
+
+      populateLevelOptions();
+      updateLevelUi(1);
+
+      levelSelect.addEventListener("change", (event) => {
+        const level = Number(event.target.value) || 1;
+        updateLevelUi(level);
+      });
 
       categoryButtons.forEach((button) => {
         button.addEventListener("click", () => {
