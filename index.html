@@ -244,18 +244,21 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      align-items: flex-start;
+      align-items: center;
       color: var(--text);
       font-weight: 700;
+      text-align: center;
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
     }
 
     .xp-numbers {
       display: flex;
       align-items: baseline;
+      justify-content: center;
       gap: 10px;
       font-size: 15px;
       letter-spacing: 0.4px;
+      width: 100%;
     }
 
     .xp-numbers span {
@@ -273,11 +276,14 @@
       color: rgba(16, 42, 67, 0.75);
     }
 
-    .xp-caption {
-      font-size: 12px;
-      color: rgba(16, 42, 67, 0.65);
-      letter-spacing: 0.3px;
-      align-self: flex-end;
+    .xp-actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .xp-actions .toggle {
+      min-width: 140px;
     }
 
     .region h2 {
@@ -517,7 +523,9 @@
               <div class="xp-progress" data-xp-progress>0%</div>
             </div>
           </div>
-          <div class="xp-caption">Current / Remaining / Needed</div>
+          <div class="xp-actions">
+            <button class="toggle" data-add-xp type="button">XP +100</button>
+          </div>
         </div>
       </article>
     </section>
@@ -534,40 +542,35 @@
       const xpFill = document.querySelector("[data-xp-fill]");
       const xpNumbers = document.querySelector("[data-xp-numbers]");
       const xpProgress = document.querySelector("[data-xp-progress]");
+      const addXpButton = document.querySelector("[data-add-xp]");
 
-      const xpRequirements = [
-        80, 90, 100, 110, 125, 140, 160, 180, 200, 225,
-        250, 275, 300, 330, 360, 390, 420, 455, 490, 525,
-        560, 600, 640, 680, 720, 765, 810, 855, 900, 950,
-        1000, 1050, 1100, 1160, 1220, 1280, 1340, 1410, 1480, 1550,
-        1620, 1700, 1780, 1860, 1940, 2030, 2120, 2210, 2300, 2400,
-      ];
+      const xpRequirements = [130, 170, 220, 280, 350, 430, 520, 620, 730];
+      const maxLevel = xpRequirements.length + 1;
+      let currentLevel = 1;
+      let currentXp = 0;
 
       const formatNumber = (value) => value.toLocaleString("en-US");
 
       const populateLevelOptions = () => {
-        xpRequirements.forEach((_, index) => {
+        Array.from({ length: maxLevel }, (_, index) => index + 1).forEach((level) => {
           const option = document.createElement("option");
-          const level = index + 1;
           option.value = String(level);
-          option.textContent = `Level ${level}`;
+          option.textContent = String(level);
           levelSelect.appendChild(option);
         });
         levelSelect.value = "1";
       };
 
-      const getXpState = (level) => {
-        const idx = Math.max(0, Math.min(level - 1, xpRequirements.length - 1));
-        const required = xpRequirements[idx] || 0;
-        const current = level === xpRequirements.length ? required : 0;
-        const remaining = Math.max(required - current, 0);
-        const percent = required === 0 ? 100 : Math.min((current / required) * 100, 100);
-        return { current, remaining, required, percent };
+      const getXpState = () => {
+        const required = currentLevel === maxLevel ? 0 : xpRequirements[currentLevel - 1];
+        const remaining = Math.max(required - currentXp, 0);
+        const percent = required === 0 ? 100 : Math.min((currentXp / required) * 100, 100);
+        return { current: currentXp, remaining, required, percent };
       };
 
-      const updateLevelUi = (level) => {
-        const { current, remaining, required, percent } = getXpState(level);
-        levelDisplay.textContent = level;
+      const updateLevelUi = () => {
+        const { current, remaining, required, percent } = getXpState();
+        levelDisplay.textContent = currentLevel;
         xpFill.style.width = `${percent}%`;
         xpNumbers.innerHTML = `
           <span>${formatNumber(current)}</span>
@@ -575,7 +578,23 @@
           <span>${formatNumber(required)}</span>
         `;
         xpProgress.textContent = `${percent.toFixed(1)}%`;
-        levelSelect.value = String(level);
+        levelSelect.value = String(currentLevel);
+      };
+
+      const applyXp = (amount) => {
+        if (currentLevel >= maxLevel) return;
+
+        currentXp += amount;
+        while (currentLevel < maxLevel && currentXp >= xpRequirements[currentLevel - 1]) {
+          currentXp -= xpRequirements[currentLevel - 1];
+          currentLevel += 1;
+        }
+
+        if (currentLevel === maxLevel) {
+          currentXp = 0;
+        }
+
+        updateLevelUi();
       };
 
       const swordSilhouetteSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="#1d3557">
@@ -624,11 +643,16 @@
       };
 
       populateLevelOptions();
-      updateLevelUi(1);
+      updateLevelUi();
 
       levelSelect.addEventListener("change", (event) => {
-        const level = Number(event.target.value) || 1;
-        updateLevelUi(level);
+        currentLevel = Math.min(Number(event.target.value) || 1, maxLevel);
+        currentXp = 0;
+        updateLevelUi();
+      });
+
+      addXpButton.addEventListener("click", () => {
+        applyXp(100);
       });
 
       categoryButtons.forEach((button) => {
