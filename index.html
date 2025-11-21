@@ -73,6 +73,109 @@
       flex: 1;
     }
 
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--divider);
+      border-radius: 10px;
+      padding: 14px 12px;
+      box-shadow: 0 10px 24px rgba(16, 42, 67, 0.08);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat-header .level-badge {
+      background: var(--accent);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      font-size: 13px;
+    }
+
+    .stat-header label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-header select,
+    .xp-input input {
+      border: 1px solid var(--divider);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-weight: 700;
+      color: var(--text);
+      background: #f8f9fb;
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+    }
+
+    .xp-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .xp-input label {
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .gauge {
+      position: relative;
+      background: #e9eef5;
+      border: 1px solid var(--divider);
+      border-radius: 12px;
+      overflow: hidden;
+      height: 72px;
+    }
+
+    .gauge .fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--fill, 0%);
+      background: linear-gradient(90deg, #1d3557 0%, #4b73c6 100%);
+      transition: width 0.2s ease;
+    }
+
+    .gauge .labels {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #0f1f3a;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+      padding: 0 12px;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .gauge .labels span {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .region h2 {
       color: var(--accent);
       opacity: 0.5;
@@ -259,8 +362,88 @@
 
       <article class="region stat" aria-label="stat 구역">
         <h2>stat</h2>
+        <div class="stat-card" aria-live="polite">
+          <div class="stat-header">
+            <div class="level-badge">레벨 <span id="current-level">1</span></div>
+            <select id="level-select" name="level-select" aria-label="레벨">
+            </select>
+          </div>
+
+          <div class="xp-input">
+            <label for="current-exp">현재 경험치</label>
+            <input id="current-exp" type="number" min="0" step="1" value="0" aria-label="현재 경험치 입력" />
+          </div>
+
+          <div class="gauge" aria-label="경험치 게이지" role="img">
+            <div class="fill" id="gauge-fill" style="--fill: 0%"></div>
+            <div class="labels" id="gauge-labels">
+              <span id="gauge-values">0 / 0 / 0</span>
+            </div>
+          </div>
+        </div>
       </article>
     </section>
   </div>
+
+  <script>
+    const levelRequirements = [
+      120, 130, 140, 151, 163, 176, 190, 206, 222, 240, 259, 280, 302, 326, 352, 381, 411, 444, 480, 518, 559, 604,
+      652, 705, 761, 822, 888, 959, 1035, 1118, 1208, 1304, 1408, 1521, 1643, 1774, 1916, 2069, 2235, 2414, 2607,
+      2815, 3041, 3284, 3547, 3830, 4137, 4468, 4825, 5211
+    ];
+
+    const levelSelect = document.getElementById("level-select");
+    const currentLevel = document.getElementById("current-level");
+    const currentExpInput = document.getElementById("current-exp");
+    const gaugeFill = document.getElementById("gauge-fill");
+    const gaugeValues = document.getElementById("gauge-values");
+
+    function formatNumber(value) {
+      return Number(value || 0).toLocaleString("ko-KR");
+    }
+
+    function buildLevelOptions() {
+      for (let i = 1; i <= levelRequirements.length; i += 1) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.textContent = `${i}`;
+        levelSelect.appendChild(option);
+      }
+    }
+
+    function updateExpStats() {
+      const level = Number(levelSelect.value) || 1;
+      const neededForNext = levelRequirements[level - 1];
+      let currentExp = Number(currentExpInput.value);
+      if (!Number.isFinite(currentExp) || currentExp < 0) {
+        currentExp = 0;
+      }
+
+      if (Number.isFinite(neededForNext)) {
+        currentExpInput.max = neededForNext;
+      } else {
+        currentExpInput.removeAttribute("max");
+      }
+
+      const cappedExp = Number.isFinite(neededForNext)
+        ? Math.max(0, Math.min(currentExp, neededForNext))
+        : Math.max(0, currentExp);
+      const remaining = Number.isFinite(neededForNext) ? Math.max(neededForNext - cappedExp, 0) : 0;
+      const progress = Number.isFinite(neededForNext) ? Math.min((cappedExp / neededForNext) * 100, 100) : 100;
+
+      currentLevel.textContent = level.toString();
+      gaugeFill.style.setProperty("--fill", `${progress}%`);
+      gaugeValues.textContent = `${formatNumber(cappedExp)} / ${formatNumber(remaining)} / ${
+        Number.isFinite(neededForNext) ? formatNumber(neededForNext) : "만렙"
+      }`;
+    }
+
+    buildLevelOptions();
+    levelSelect.value = "1";
+    updateExpStats();
+
+    levelSelect.addEventListener("change", updateExpStats);
+    currentExpInput.addEventListener("input", updateExpStats);
+  </script>
 </body>
 </html>
