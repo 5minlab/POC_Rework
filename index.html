@@ -69,6 +69,88 @@
       flex: 2;
     }
 
+    .prod .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 6px 4px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .toggle {
+      border: 1px solid var(--divider);
+      background: #fff;
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .toggle.is-active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px rgba(29, 53, 87, 0.18);
+    }
+
+    .subsection {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .subsection[hidden] {
+      display: none;
+    }
+
+    .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: rgba(16, 42, 67, 0.65);
+      letter-spacing: 1px;
+    }
+
+    .preview {
+      border: 1px dashed var(--divider);
+      border-radius: 12px;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px;
+      background: radial-gradient(circle at 30% 30%, rgba(29, 53, 87, 0.06), transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(29, 53, 87, 0.04), transparent 45%);
+    }
+
+    .preview img {
+      width: 140px;
+      max-width: 100%;
+      filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.14));
+    }
+
+    .preview .placeholder {
+      color: rgba(16, 42, 67, 0.7);
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
     .region.stat {
       flex: 1;
     }
@@ -255,6 +337,33 @@
 
       <article class="region prod" aria-label="prod 구역">
         <h2>prod</h2>
+        <div class="panel" aria-live="polite">
+          <div class="toggle-group" role="tablist" aria-label="category toggle">
+            <button class="toggle is-active" data-category-toggle="weapons" aria-pressed="true">Weapons</button>
+            <button class="toggle" data-category-toggle="forge" aria-pressed="false">Blacksmith Gear</button>
+          </div>
+
+          <div class="subsection" data-category="weapons">
+            <div class="label">Weapons</div>
+            <div class="toggle-group" role="tablist" aria-label="weapon toggle">
+              <button class="toggle is-active" data-item-toggle="Sword" aria-pressed="true">Sword</button>
+              <button class="toggle" data-item-toggle="Claw" aria-pressed="false">Claw</button>
+            </div>
+          </div>
+
+          <div class="subsection" data-category="forge" hidden>
+            <div class="label">Blacksmith Gear</div>
+            <div class="toggle-group" role="tablist" aria-label="forge toggle">
+              <button class="toggle" data-item-toggle="Hammer" aria-pressed="false">Hammer</button>
+              <button class="toggle" data-item-toggle="Anvil" aria-pressed="false">Anvil</button>
+            </div>
+          </div>
+
+          <div class="preview" aria-live="polite">
+            <img src="" alt="Sword silhouette" class="preview-image" />
+            <div class="placeholder">Silhouette preview</div>
+          </div>
+        </div>
       </article>
 
       <article class="region stat" aria-label="stat 구역">
@@ -262,5 +371,95 @@
       </article>
     </section>
   </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const categoryButtons = document.querySelectorAll("[data-category-toggle]");
+      const sections = document.querySelectorAll(".subsection");
+      const itemButtons = document.querySelectorAll("[data-item-toggle]");
+      const previewImage = document.querySelector(".preview-image");
+      const placeholder = document.querySelector(".preview .placeholder");
+
+      const swordSilhouetteSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="#1d3557">
+          <path d="M97 12h6l5 46-8 9-8-9z" />
+          <path d="M100 67l34 34-9 9-25-25-25 25-9-9z" />
+          <rect x="93" y="101" width="14" height="63" rx="4" />
+          <rect x="82" y="158" width="36" height="11" rx="3" />
+          <rect x="90" y="169" width="20" height="18" rx="4" />
+        </svg>`;
+
+      const assets = {
+        Sword: `data:image/svg+xml,${encodeURIComponent(swordSilhouetteSvg)}`,
+      };
+
+      let activeCategory = "weapons";
+      let activeItem = "Sword";
+
+      const setActiveButton = (buttons, target) => {
+        buttons.forEach((btn) => {
+          const isActive = btn === target;
+          btn.classList.toggle("is-active", isActive);
+          btn.setAttribute("aria-pressed", isActive);
+        });
+      };
+
+      const showSection = (category) => {
+        sections.forEach((section) => {
+          const matches = section.dataset.category === category;
+          section.toggleAttribute("hidden", !matches);
+        });
+      };
+
+      const updatePreview = () => {
+        const asset = assets[activeItem];
+        if (asset) {
+          previewImage.src = asset;
+          previewImage.alt = `${activeItem} silhouette`;
+          previewImage.style.display = "block";
+          placeholder.textContent = `${activeItem} silhouette ready`;
+        } else {
+          previewImage.removeAttribute("src");
+          previewImage.alt = `${activeItem} placeholder`;
+          previewImage.style.display = "none";
+          placeholder.textContent = `${activeItem} preview coming soon`;
+        }
+      };
+
+      categoryButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const category = button.dataset.categoryToggle;
+          if (category === activeCategory) return;
+
+          activeCategory = category;
+          setActiveButton(categoryButtons, button);
+          showSection(category);
+
+          const visibleSection = document.querySelector(
+            `.subsection[data-category="${category}"]`
+          );
+          const firstItemButton = visibleSection?.querySelector("[data-item-toggle]");
+          if (firstItemButton) {
+            activeItem = firstItemButton.dataset.itemToggle;
+            setActiveButton(visibleSection.querySelectorAll("[data-item-toggle]"), firstItemButton);
+          }
+          updatePreview();
+        });
+      });
+
+      itemButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const item = button.dataset.itemToggle;
+          if (item === activeItem) return;
+
+          const parentSection = button.closest(".subsection");
+          setActiveButton(parentSection.querySelectorAll("[data-item-toggle]"), button);
+          activeItem = item;
+          updatePreview();
+        });
+      });
+
+      showSection(activeCategory);
+      updatePreview();
+    });
+  </script>
 </body>
 </html>
