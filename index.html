@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -24,7 +24,7 @@
     }
 
     body {
-      font-family: "Pretendard", "Noto Sans KR", system-ui, -apple-system, sans-serif;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
       background: none;
       color: var(--text);
       min-height: 100vh;
@@ -103,16 +103,7 @@
       font-size: 13px;
     }
 
-    .stat-header label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .stat-header select,
-    .xp-input input {
+    .stat-header select {
       border: 1px solid var(--divider);
       border-radius: 8px;
       padding: 8px 10px;
@@ -120,18 +111,6 @@
       color: var(--text);
       background: #f8f9fb;
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-    }
-
-    .xp-input {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .xp-input label {
-      font-weight: 800;
-      color: var(--accent);
     }
 
     .gauge {
@@ -166,6 +145,7 @@
       padding: 0 12px;
       text-align: center;
       font-weight: 800;
+      gap: 4px;
     }
 
     .gauge .labels span {
@@ -323,11 +303,11 @@
 </head>
 <body>
   <div class="page">
-    <section class="grid" aria-label="메인 보드">
-      <article class="region inv" aria-label="inv 구역">
+    <section class="grid" aria-label="main board">
+      <article class="region inv" aria-label="inv section">
         <h2>inv</h2>
         <div class="inv-layout">
-          <section class="eqpt" aria-label="eqpt 구역">
+          <section class="eqpt" aria-label="eqpt section">
             <div class="slot earring-1" aria-label="Earring I slot">Earring I</div>
             <div class="slot earring-2" aria-label="Earring II slot">Earring II</div>
             <div class="slot hammer" aria-label="Hammer slot">Hammer</div>
@@ -356,28 +336,24 @@
         </div>
       </article>
 
-      <article class="region prod" aria-label="prod 구역">
+      <article class="region prod" aria-label="prod section">
         <h2>prod</h2>
       </article>
 
-      <article class="region stat" aria-label="stat 구역">
+      <article class="region stat" aria-label="stat section">
         <h2>stat</h2>
         <div class="stat-card" aria-live="polite">
           <div class="stat-header">
-            <div class="level-badge">레벨 <span id="current-level">1</span></div>
-            <select id="level-select" name="level-select" aria-label="레벨">
+            <div class="level-badge">Level <span id="current-level">1</span></div>
+            <select id="level-select" name="level-select" aria-label="Level">
             </select>
           </div>
 
-          <div class="xp-input">
-            <label for="current-exp">현재 경험치</label>
-            <input id="current-exp" type="number" min="0" step="1" value="0" aria-label="현재 경험치 입력" />
-          </div>
-
-          <div class="gauge" aria-label="경험치 게이지" role="img">
+          <div class="gauge" aria-label="experience gauge" role="img">
             <div class="fill" id="gauge-fill" style="--fill: 0%"></div>
             <div class="labels" id="gauge-labels">
               <span id="gauge-values">0 / 0 / 0</span>
+              <span id="gauge-progress">0%</span>
             </div>
           </div>
         </div>
@@ -394,12 +370,14 @@
 
     const levelSelect = document.getElementById("level-select");
     const currentLevel = document.getElementById("current-level");
-    const currentExpInput = document.getElementById("current-exp");
     const gaugeFill = document.getElementById("gauge-fill");
     const gaugeValues = document.getElementById("gauge-values");
+    const gaugeProgress = document.getElementById("gauge-progress");
+
+    const currentExp = 0;
 
     function formatNumber(value) {
-      return Number(value || 0).toLocaleString("ko-KR");
+      return Number(value || 0).toLocaleString("en-US");
     }
 
     function buildLevelOptions() {
@@ -414,28 +392,16 @@
     function updateExpStats() {
       const level = Number(levelSelect.value) || 1;
       const neededForNext = levelRequirements[level - 1];
-      let currentExp = Number(currentExpInput.value);
-      if (!Number.isFinite(currentExp) || currentExp < 0) {
-        currentExp = 0;
-      }
-
-      if (Number.isFinite(neededForNext)) {
-        currentExpInput.max = neededForNext;
-      } else {
-        currentExpInput.removeAttribute("max");
-      }
-
-      const cappedExp = Number.isFinite(neededForNext)
-        ? Math.max(0, Math.min(currentExp, neededForNext))
-        : Math.max(0, currentExp);
+      const cappedExp = Number.isFinite(neededForNext) ? Math.max(0, Math.min(currentExp, neededForNext)) : 0;
       const remaining = Number.isFinite(neededForNext) ? Math.max(neededForNext - cappedExp, 0) : 0;
       const progress = Number.isFinite(neededForNext) ? Math.min((cappedExp / neededForNext) * 100, 100) : 100;
 
       currentLevel.textContent = level.toString();
       gaugeFill.style.setProperty("--fill", `${progress}%`);
       gaugeValues.textContent = `${formatNumber(cappedExp)} / ${formatNumber(remaining)} / ${
-        Number.isFinite(neededForNext) ? formatNumber(neededForNext) : "만렙"
+        Number.isFinite(neededForNext) ? formatNumber(neededForNext) : "Max"
       }`;
+      gaugeProgress.textContent = `${progress.toFixed(1)}%`;
     }
 
     buildLevelOptions();
@@ -443,7 +409,6 @@
     updateExpStats();
 
     levelSelect.addEventListener("change", updateExpStats);
-    currentExpInput.addEventListener("input", updateExpStats);
   </script>
 </body>
 </html>
