@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <style>
+    :root {
+      --accent: #1d3557;
+      --muted: #f1faee;
+      --divider: #a8dadc;
+      --text: #102a43;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Pretendard", "Noto Sans KR", system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 50%, #f8fafc 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 20px 32px;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 12px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      letter-spacing: 0.4px;
+      color: var(--accent);
+    }
+
+    header p {
+      color: #4a5568;
+    }
+
+    .grid {
+      display: flex;
+      min-height: 60vh;
+    }
+
+    .region {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 10px 12px;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .region.inv {
+      flex: 1;
+    }
+
+    .region.pro {
+      flex: 2;
+    }
+
+    .region.stat {
+      flex: 1;
+    }
+
+    @media (max-width: 960px) {
+      .grid {
+        flex-direction: column;
+      }
+
+      .region {
+        flex: none;
+        min-height: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Path Of Crafting</h1>
+    </header>
+
+    <section class="grid" aria-label="메인 보드">
+      <article class="region inv" aria-label="Inv 구역">
+        <h2>Inv</h2>
+      </article>
+
+      <article class="region pro" aria-label="Pro 구역">
+        <h2>Pro</h2>
+      </article>
+
+      <article class="region stat" aria-label="Stat 구역">
+        <h2>Stat</h2>
+      </article>
+    </section>
+  </div>
+</body>
+</html>
