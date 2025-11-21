@@ -25,7 +25,7 @@
 
     body {
       font-family: "Pretendard", "Noto Sans KR", system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 50%, #f8fafc 100%);
+      background: none;
       color: var(--text);
       min-height: 100vh;
     }
@@ -58,7 +58,7 @@
     }
 
     .region.inv {
-      flex: 1.5;
+      flex: 1;
     }
 
     .region.inv .inv-layout {
@@ -103,30 +103,20 @@
     .inventory {
       position: relative;
       padding: 14px 12px;
+      background: none;
+      width: 100%;
+      max-width: 100%;
     }
 
     .eqpt {
       display: grid;
-      grid-template-columns: repeat(4, minmax(90px, 1fr));
-      grid-template-rows: repeat(4, minmax(86px, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-rows: repeat(4, minmax(0, 1fr));
       gap: 12px;
       align-items: center;
       justify-items: center;
-      background: linear-gradient(180deg, rgba(18, 18, 18, 0.24) 0%, rgba(40, 28, 18, 0.18) 55%, rgba(18, 18, 18, 0.24) 100%),
-        radial-gradient(circle at 70% 90%, rgba(255, 87, 34, 0.25), rgba(255, 140, 0, 0));
       color: var(--text);
       isolation: isolate;
-    }
-
-    .eqpt::after {
-      content: "";
-      position: absolute;
-      inset: 10px;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0));
-      border-radius: 14px;
-      opacity: 0.7;
-      pointer-events: none;
-      z-index: 0;
     }
 
     .eqpt .slot {
@@ -203,10 +193,10 @@
     .inventory {
       display: grid;
       grid-template-columns: repeat(10, minmax(0, 1fr));
-      grid-template-rows: repeat(10, minmax(36px, 1fr));
+      grid-template-rows: repeat(10, minmax(0, 1fr));
       gap: 6px;
       padding-top: 22px;
-      background: linear-gradient(180deg, rgba(16, 42, 67, 0.04), rgba(16, 42, 67, 0));
+      background: none;
     }
 
     .inventory .cell {
