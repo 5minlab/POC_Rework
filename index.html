@@ -73,6 +73,101 @@
       flex: 1;
     }
 
+    .stat-card {
+      background: rgba(247, 247, 247, 0.82);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(16, 42, 67, 0.1);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--accent);
+    }
+
+    .stat-header .level {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-header .label {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    .gauge {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .gauge .bar {
+      position: relative;
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: #e8eef5;
+      overflow: hidden;
+      border: 1px solid rgba(16, 42, 67, 0.12);
+    }
+
+    .gauge .fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #1d3557, #4e74a6);
+      transition: width 0.3s ease;
+    }
+
+    .stat-rows {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+      font-size: 14px;
+      color: #1d2a3f;
+    }
+
+    .stat-rows .value {
+      font-weight: 800;
+      color: #0f2034;
+    }
+
+    .xp-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .xp-controls button {
+      border: none;
+      background: #1d3557;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .xp-controls button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
     .region h2 {
       color: var(--accent);
       opacity: 0.5;
@@ -259,8 +354,116 @@
 
       <article class="region stat" aria-label="stat 구역">
         <h2>stat</h2>
+        <section class="stat-card" aria-label="레벨 및 경험치">
+          <div class="stat-header">
+            <div>
+              <div class="label">현재 레벨</div>
+              <div class="level" id="level-display">Lv. 1</div>
+            </div>
+            <div class="label" id="next-level-label">다음 레벨까지</div>
+          </div>
+
+          <div class="gauge" aria-label="경험치 게이지">
+            <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="exp-progress">
+              <div class="fill" id="exp-fill"></div>
+            </div>
+            <div class="stat-rows" aria-live="polite">
+              <div>현재 경험치</div>
+              <div class="value" id="current-exp">0</div>
+              <div>필요 경험치</div>
+              <div class="value" id="required-exp">0</div>
+              <div>남은 경험치</div>
+              <div class="value" id="remaining-exp">0</div>
+              <div>게이지</div>
+              <div class="value" id="gauge-percent">0%</div>
+            </div>
+          </div>
+
+          <div class="xp-controls" aria-label="경험치 조절">
+            <button type="button" data-gain="25">+25 EXP</button>
+            <button type="button" data-gain="50">+50 EXP</button>
+            <button type="button" data-gain="100">+100 EXP</button>
+            <button type="button" data-gain="200">+200 EXP</button>
+          </div>
+        </section>
       </article>
     </section>
   </div>
+
+  <script>
+    const expTable = [
+      20, 55, 110, 190, 295, 425, 580, 760, 965, 1195, 1450, 1730, 2035, 2365, 2720, 3100, 3505, 3935, 4390, 4870,
+      5375, 5905, 6460, 7040, 7645, 8275, 8930, 9610, 10315, 11045, 11700, 12380, 13085, 13815, 14570, 15350, 16155,
+      16985, 17840, 18720, 19625, 20555, 21510, 22490, 23495, 24525, 25580, 26660, 27765, 28895, 30050
+    ];
+
+    const state = {
+      level: 1,
+      currentExp: 0
+    };
+
+    const levelDisplay = document.getElementById("level-display");
+    const nextLevelLabel = document.getElementById("next-level-label");
+    const currentExpEl = document.getElementById("current-exp");
+    const requiredExpEl = document.getElementById("required-exp");
+    const remainingExpEl = document.getElementById("remaining-exp");
+    const gaugePercentEl = document.getElementById("gauge-percent");
+    const fillEl = document.getElementById("exp-fill");
+    const progressBar = document.getElementById("exp-progress");
+    const buttons = document.querySelectorAll(".xp-controls button");
+
+    function updateStat() {
+      const levelIndex = state.level - 1;
+      const requiredExp = expTable[levelIndex];
+
+      const atMax = levelIndex >= expTable.length - 1;
+      const nextLabel = atMax ? "최대 레벨" : `다음 레벨까지 Lv. ${state.level + 1}`;
+      const remainingExp = atMax ? 0 : Math.max(requiredExp - state.currentExp, 0);
+      const percent = atMax ? 100 : Math.min((state.currentExp / requiredExp) * 100, 100);
+
+      levelDisplay.textContent = `Lv. ${state.level}`;
+      nextLevelLabel.textContent = nextLabel;
+      currentExpEl.textContent = state.currentExp.toLocaleString();
+      requiredExpEl.textContent = atMax ? "-" : requiredExp.toLocaleString();
+      remainingExpEl.textContent = atMax ? "-" : remainingExp.toLocaleString();
+      gaugePercentEl.textContent = `${percent.toFixed(1)}%`;
+
+      fillEl.style.width = `${percent}%`;
+      progressBar.setAttribute("aria-valuenow", percent.toFixed(1));
+
+      buttons.forEach((btn) => {
+        btn.disabled = atMax;
+      });
+    }
+
+    function gainExp(amount) {
+      if (state.level >= expTable.length) return;
+
+      state.currentExp += amount;
+      let requiredExp = expTable[state.level - 1];
+
+      while (state.currentExp >= requiredExp && state.level < expTable.length) {
+        state.currentExp -= requiredExp;
+        state.level += 1;
+        requiredExp = expTable[state.level - 1] || requiredExp;
+      }
+
+      if (state.level >= expTable.length) {
+        state.level = expTable.length;
+        state.currentExp = expTable[expTable.length - 1];
+      }
+
+      updateStat();
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const amount = Number(button.dataset.gain);
+        gainExp(amount);
+      });
+    });
+
+    updateStat();
+  </script>
 </body>
 </html>
