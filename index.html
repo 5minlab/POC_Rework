@@ -8,7 +8,7 @@
     :root {
       --accent: #1d3557;
       --muted: #f1faee;
-      --divider: #a8dadc;
+      --divider: #b0b0b0;
       --text: #102a43;
     }
 
@@ -16,6 +16,11 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
     }
 
     body {
@@ -26,32 +31,14 @@
     }
 
     .page {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 24px 20px 32px;
-    }
-
-    header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      gap: 12px;
-    }
-
-    header h1 {
-      font-size: 28px;
-      letter-spacing: 0.4px;
-      color: var(--accent);
-    }
-
-    header p {
-      color: #4a5568;
+      width: 100%;
+      min-height: 100vh;
+      padding: 0;
     }
 
     .grid {
       display: flex;
-      min-height: 60vh;
+      min-height: 100vh;
     }
 
     .region {
@@ -62,6 +49,11 @@
       color: var(--accent);
       font-weight: 700;
       letter-spacing: 0.3px;
+      border-left: 1px solid var(--divider);
+    }
+
+    .region:first-child {
+      border-left: none;
     }
 
     .region.inv {
@@ -90,17 +82,13 @@
 </head>
 <body>
   <div class="page">
-    <header>
-      <h1>Path Of Crafting</h1>
-    </header>
-
     <section class="grid" aria-label="메인 보드">
-      <article class="region inv" aria-label="Inv 구역">
-        <h2>Inv</h2>
+      <article class="region inv" aria-label="Inv. 구역">
+        <h2>Inv.</h2>
       </article>
 
-      <article class="region pro" aria-label="Pro 구역">
-        <h2>Pro</h2>
+      <article class="region pro" aria-label="Prod. 구역">
+        <h2>Prod.</h2>
       </article>
 
       <article class="region stat" aria-label="Stat 구역">
